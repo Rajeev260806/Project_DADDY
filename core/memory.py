@@ -1,6 +1,6 @@
 from config import MAX_HISTORY
 
-class ConversationHistory:
+class ConversationMemory:
 
     def __init__(self):
         self.history = []
