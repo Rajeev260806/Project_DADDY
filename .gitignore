@@ -1,0 +1,111 @@
+# ─────────────────────────────────────────
+#  Nova Personal Assistant — .gitignore
+# ─────────────────────────────────────────
+
+
+# ── Environment & Secrets ─────────────────
+.env
+.env.*
+!.env.example
+
+
+# ── Python Virtual Environment ────────────
+venv/
+.venv/
+env/
+ENV/
+
+
+# ── Python Cache & Bytecode ───────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+
+
+# ── Distribution / Build ──────────────────
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+wheels/
+
+
+# ── Logs ──────────────────────────────────
+logs/
+*.log
+
+
+# ── Knowledge Base & Vector Store ─────────
+knowledge/vector_store/
+*.chroma
+chroma.sqlite3
+
+
+# ── AI Model Files ────────────────────────
+*.gguf
+*.bin
+*.pt
+*.pth
+*.safetensors
+models/
+
+
+# ── Audio Temp Files ──────────────────────
+*.wav
+*.mp3
+*.ogg
+*.flac
+temp_audio/
+
+
+# ── OS Generated Files ────────────────────
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+
+# ── VS Code ───────────────────────────────
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+
+
+# ── PyCharm / JetBrains ───────────────────
+.idea/
+*.iml
+
+
+# ── Pytest & Coverage ─────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+
+# ── Jupyter Notebooks ─────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+
+# ── Temporary & Misc ──────────────────────
+*.tmp
+*.bak
+*.swp
+*.swo
+tmp/
+temp/
