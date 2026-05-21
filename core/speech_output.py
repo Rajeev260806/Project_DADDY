@@ -13,7 +13,7 @@ class SpeechOutput:
         engine = pyttsx3.init()
         engine.setProperty("rate",SPEECH_RATE)
         engine.setProperty("volume",SPEECH_VOLUME)
-        self.setVoice(VOICE)
+        self.setVoice(engine,VOICE)
         return engine
 
     def setVoice(self,engine,gender: str):
@@ -42,7 +42,9 @@ class SpeechOutput:
             print(f"[TTS Error] Could not speak: {e}")
     
     def list_voices(self):
-        voices = self.engine.getProperty("voices")
+        engine = self.configureModel()
+        voices = engine.getProperty("voices")
         print("\nAvailable voices on your system:")
         for i, voice in enumerate(voices):
             print(f"  [{i}] {voice.name} — {voice.id}")
+        engine.stop()

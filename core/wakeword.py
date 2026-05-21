@@ -26,7 +26,7 @@ class WakeWordDetector:
         logger.info("Recording complete.")
         return audio
 
-    def isLoud(self,audio: np.ndarray):
+    def isLoud(self,audio: np.ndarray)->bool:
         rms = np.sqrt(np.mean(audio.astype(np.float32)**2))
         return rms>SILENCE
     
@@ -53,7 +53,7 @@ class WakeWordDetector:
         return self.wake_word in text
     
     def listen(self) -> bool:
-        audio = self.recordChunk
+        audio = self.recordChunk()
 
         if not self.isLoud(audio):
             return False
@@ -69,7 +69,7 @@ class WakeWordDetector:
                 return True
         finally:
             os.remove(wav_path)
-        return True
+        return False
     
     def adjust_threshold(self, new_threshold: int):
         global SILENCE
