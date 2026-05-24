@@ -10,6 +10,8 @@ from core.memory import ConversationMemory
 from core.speech_input import SpeechInput
 from core.speech_output import SpeechOutput
 from core.wakeword import WakeWordDetector
+from agents.filesystem_agent import FileSystemAgent
+from core.router import Router
 from config import ASSISTANT_NAME
 
 logger.remove()
@@ -26,10 +28,29 @@ def print_banner():
         border_style="bold cyan"
     ))
 
+def processCommand(user_input: str,llm: LLMCore,memory: ConversationMemory,router: Router,fs_agent: FileSystemAgent,speech_output: SpeechOutput):
+    agent = router.route(user_input)
+    console.print(f"[dim]→ Routing to: {agent}[/dim]")
+
+    if agent=="filesystem":
+        console.print(f"[dim]{ASSISTANT_NAME} is working on it...[/dim]")
+        result = fs_agent.safe_run(user_input)
+        console.print(f"\n[bold cyan]{ASSISTANT_NAME}:[/bold cyan] {result}\n")
+        speech_output.speak(result)
+    else:
+        # General conversation — goes to Llama with memory
+        history = memory.getHistory()
+        memory.add_user_message(user_input)
+        console.print(f"[dim]{ASSISTANT_NAME} is thinking...[/dim]")
+        response = llm.chat(user_input, history)
+        memory.add_agent_message(response)
+        console.print(f"\n[bold cyan]{ASSISTANT_NAME}:[/bold cyan] {response}\n")
+        speech_output.speak(response)
+
 def handleSpecialCommands(userInput:str,mode:str,memory:ConversationMemory,speech_input:SpeechInput,wake_detector:WakeWordDetector,speech_output:SpeechOutput)->tuple[bool,str,SpeechInput]:
     cmd = userInput.lower().strip()
     if cmd in ["quit","exit","bye"]:
-        byeText = "Tata Tata Bye Bye!"
+        byeText = "Tata Bye Bye See You!"
         console.print(f"[cyan]{ASSISTANT_NAME}: {byeText}[/cyan]")
         speech_output.speak(byeText)
         sys.exit(0)
@@ -70,7 +91,7 @@ def handleSpecialCommands(userInput:str,mode:str,memory:ConversationMemory,speec
 
     return False, mode, speech_input
 
-def runWakeWordMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput,memory:ConversationMemory,wakeword:WakeWordDetector):
+def runWakeWordMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput,memory:ConversationMemory,wakeword:WakeWordDetector,router:Router,fs_agent:FileSystemAgent):
     console.print(f"[dim] Listening for wake word: 'Hey Daddy'...[/dim]")
     while True:
         detected = wakeword.listen()
@@ -97,19 +118,11 @@ def runWakeWordMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOut
             console.print(f"[dim]Listening for wake word: 'Hey Daddy'...[/dim]")
             continue
 
-        history = memory.getHistory()
-        memory.add_user_message(user_input)
-
-        console.print(f"[dim]{ASSISTANT_NAME} is thinking...[/dim]")
-        response = llm.chat(user_input, history)
-        memory.add_agent_message(response)
-
-        console.print(f"\n[bold cyan]{ASSISTANT_NAME}:[/bold cyan] {response}\n")
-        speech_output.speak(response)
+        processCommand(user_input, llm, memory, router, fs_agent, speech_output)
 
         console.print(f"[dim]Listening for wake word: 'Hey Daddy'...[/dim]")
 
-def runTextMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput,memory:ConversationMemory,wakeword:WakeWordDetector):
+def runTextMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput,memory:ConversationMemory,wakeword:WakeWordDetector,router:Router,fs_agent:FileSystemAgent):
     while True:
         user_input = console.input("[bold green]You said:[/bold green] ").strip()
 
@@ -123,17 +136,9 @@ def runTextMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput,
         if is_special:
             continue
 
-        history = memory.getHistory()
-        memory.add_user_message(user_input)
+        processCommand(user_input, llm, memory, router, fs_agent, speech_output)
 
-        console.print(f"[dim]{ASSISTANT_NAME} is thinking...[/dim]")
-        response = llm.chat(user_input, history)
-        memory.add_agent_message(response)
-
-        console.print(f"\n[bold cyan]{ASSISTANT_NAME}:[/bold cyan] {response}\n")
-        speech_output.speak(response)
-
-def runVoiceMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput,memory:ConversationMemory,wakeword:WakeWordDetector):
+def runVoiceMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput,memory:ConversationMemory,wakeword:WakeWordDetector,router:Router,fs_agent:FileSystemAgent):
     while True:
         console.print("[dim]Press Enter to start recording...[/dim]")
         input()
@@ -152,15 +157,7 @@ def runVoiceMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput
         if is_special:
             continue
 
-        history = memory.getHistory()
-        memory.add_user_message(user_input)
-
-        console.print(f"[dim]{ASSISTANT_NAME} is thinking...[/dim]")
-        response = llm.chat(user_input, history)
-        memory.add_agent_message(response)
-
-        console.print(f"\n[bold cyan]{ASSISTANT_NAME}:[/bold cyan] {response}\n")
-        speech_output.speak(response)
+        processCommand(user_input, llm, memory, router, fs_agent, speech_output)
 
 
 
@@ -180,6 +177,8 @@ def main():
     memory = ConversationMemory()
     speech_output = SpeechOutput()
     wakeword = WakeWordDetector()
+    fs_agent = FileSystemAgent()
+    router = Router()
     speech_input = None
 
     if mode in ["voice", "wake"]:
@@ -198,11 +197,11 @@ def main():
 
     try:
         if mode == "text":
-            runTextMode(llm,speech_input, speech_output, memory, wakeword)
+            runTextMode(llm,speech_input, speech_output, memory, wakeword,router,fs_agent)
         elif mode == "voice":
-            runVoiceMode(llm, speech_input, speech_output, memory, wakeword)
+            runVoiceMode(llm, speech_input, speech_output, memory, wakeword,router,fs_agent)
         elif mode == "wake":
-            runWakeWordMode(llm, speech_input, speech_output, memory, wakeword)
+            runWakeWordMode(llm, speech_input, speech_output, memory, wakeword,router,fs_agent)
     except KeyboardInterrupt:
         console.print(f"\n[cyan]{ASSISTANT_NAME}: Goodbye![/cyan]")
 
