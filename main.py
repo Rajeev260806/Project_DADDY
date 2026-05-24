@@ -64,7 +64,6 @@ def handleSpecialCommands(userInput:str,mode:str,memory:ConversationMemory,speec
         if mode == "text":
             mode = "wake"
             if speech_input is None:
-                console.print("[yellow]Loading Whisper model...[/yellow]")
                 speech_input = SpeechInput()
             console.print("[green]Switched to WAKE WORD mode. Say 'Hey Daddy' to activate.[/green]\n")
         elif mode == "voice":
@@ -182,18 +181,17 @@ def main():
     speech_input = None
 
     if mode in ["voice", "wake"]:
-        console.print("[yellow]Loading Whisper speech model...[/yellow]")
         speech_input = SpeechInput()
 
     console.print(f"[green]✓ {ASSISTANT_NAME} is ready![/green]\n")
 
     greetings = {
-        "text":  f"Hello! I'm {ASSISTANT_NAME}. Type your message below.",
-        "voice": f"Hello! I'm {ASSISTANT_NAME}. Press Enter when you want to speak.",
-        "wake":  f"Hello! I'm {ASSISTANT_NAME}. Say Hey Daddy to wake me up."
+        "text":  [f" ..Baby. {ASSISTANT_NAME}'s home..",f"Baby {ASSISTANT_NAME}'s home"],
+        "voice": [f" ..Baby. {ASSISTANT_NAME}'s home..",f"Baby {ASSISTANT_NAME}'s home"],
+        "wake":  [f" ..Baby. {ASSISTANT_NAME}'s home..",f"Baby {ASSISTANT_NAME}'s home"],
     }
-    console.print(f"[cyan]{greetings[mode]}[/cyan]\n")
-    speech_output.speak(greetings[mode])
+    console.print(f"[cyan]{greetings[mode][1]}[/cyan]\n")
+    speech_output.speak(greetings[mode][0])
 
     try:
         if mode == "text":

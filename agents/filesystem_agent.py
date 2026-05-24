@@ -199,7 +199,7 @@ class FileSystemAgent(BaseAgent):
         return f"Contents of '{data['name']}':\n{content[:1000]}"
     
     def info(self, data: dict) -> str:
-        base_url = self._resolve_path(data.get("path", "home"))
+        base_url = self.resolve_path(data.get("path", "home"))
         target = base_url / data["name"]
         if not target.exists():
             return f"'{data['name']}' not found in {base_url.name}."
