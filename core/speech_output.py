@@ -25,7 +25,6 @@ class SpeechOutput:
                 return
         if voices:
             engine.setProperty("voice", voices[0].id)
-            logger.warning(f"Gender '{gender}' not found. Using: {voices[0].name}")
 
     def speak(self,text:str):
         if not text or not text.strip():
