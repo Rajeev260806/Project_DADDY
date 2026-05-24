@@ -50,7 +50,12 @@ class WakeWordDetector:
         return text.lower().strip()
     
     def containWakeWord(self,text:str):
-        return self.wake_word in text
+        text = text.lower().strip()
+        if len(text)<6:
+            return False
+        if self.wake_word not in text:
+            return False
+        return True
     
     def listen(self) -> bool:
         audio = self.recordChunk()

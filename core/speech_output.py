@@ -33,7 +33,7 @@ class SpeechOutput:
         logger.debug(f"Speaking: {text[:80]}...")
 
         try:
-            engine = pyttsx3.init()
+            engine = self.configureModel()
             engine.say(text)
             engine.runAndWait()
             engine.stop()
