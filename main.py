@@ -90,20 +90,32 @@ def handleSpecialCommands(userInput:str,mode:str,memory:ConversationMemory,speec
 
     return False, mode, speech_input
 
-def runWakeWordMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput,memory:ConversationMemory,wakeword:WakeWordDetector,router:Router,fs_agent:FileSystemAgent):
+def goForWakeWord(wakeword:WakeWordDetector,speech_output: SpeechOutput):
     console.print(f"[dim] Listening for wake word: 'Hey Daddy'...[/dim]")
     while True:
         detected = wakeword.listen()
-        if not detected:
-            continue
+        if detected:
+            break
+    
+    console.print(f"\n[bold green] Wake word detected![/bold green]")
+    speech_output.speak("Daddy is here. Tell me?")
 
-        console.print(f"\n[bold green] Wake word detected![/bold green]")
-        speech_output.speak("Yes?")
 
+
+def runWakeWordMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput,memory:ConversationMemory,wakeword:WakeWordDetector,router:Router,fs_agent:FileSystemAgent):
+    goForWakeWord(wakeword,speech_output)
+    rest_count = 0
+    while True:
         console.print("[dim]Waiting for your command![/dim]")
-        user_input = speech_input.listen(record_sec=6)
+        user_input = speech_input.listen(record_sec=10)
 
         if not user_input:
+            rest_count+=1
+            if rest_count==3:
+                rest_count=0
+                speech_output.speak("Daddy is going to take a nap!")
+                goForWakeWord(wakeword,speech_output)
+                continue
             console.print("[yellow]Didn't catch that. Try again.[/yellow]")
             speech_output.speak("Sorry, I didn't catch that.")
             console.print(f"[dim]Listening for wake word: 'Hey Daddy'...[/dim]")

@@ -36,7 +36,7 @@ class SpeechInput:
         tmp = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
         with wave.open(tmp.name, "wb") as wf:
             wf.setnchannels(CHANNELS)
-            wf.setsampwidth(2)         # 2 bytes = 16-bit
+            wf.setsampwidth(2)        
             wf.setframerate(SAMPLE_RATE)
             wf.writeframes(audio.tobytes())
         return tmp.name
