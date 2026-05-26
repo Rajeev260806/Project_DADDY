@@ -8,18 +8,24 @@ Read the user's command and decide which agent should handle it.
 
 Reply with ONLY one of these exact words — nothing else:
 
-filesystem  → user wants to create, delete, move, rename, list, find, read or write files/folders
-general     → everything else (questions, conversation, calculations, definitions, etc.)
+filesystem  → create, delete, move, rename, list, find files or folders (NOT Word files)
+word        → anything about a .docx or Word document
+general     → everything else (questions, conversation, calculations, definitions etc.)
 
 Examples:
-"create a folder called Projects on Desktop"  → filesystem
-"move report.pdf from Downloads to Documents" → filesystem
-"find all PDF files in Downloads"             → filesystem
-"what is machine learning"                    → general
-"tell me a joke"                              → general
-"what is 25 times 48"                         → general
-"read the notes.txt file on my Desktop"       → filesystem
-"rename my resume to resume_final"            → filesystem
+"create a folder called Projects on Desktop"          → filesystem
+"delete all PDFs in Downloads"                        → filesystem
+"find files starting with report in Documents"        → filesystem
+"create a new Word document called report"            → word
+"summarize my essay.docx on Desktop"                  → word
+"add a paragraph to report.docx"                      → word
+"count words in my document"                          → word
+"replace old with new in report.docx"                 → word
+"add a heading called Introduction to my document"    → word
+"delete paragraphs containing llama in report.docx"   → word
+"what is machine learning"                            → general
+"tell me a joke"                                      → general
+"what is 25 times 48"                                 → general
 """
 
 class Router:
@@ -39,7 +45,7 @@ class Router:
         response = self.llm.invoke(messages)
         decision = response.content.strip().lower()
 
-        if decision not in ["filesystem","general"]:
+        if decision not in ["filesystem","general","word"]:
             logger.warning(f"Router got unexpected decision: '{decision}' — defaulting to general")
             decision = "general"
 
