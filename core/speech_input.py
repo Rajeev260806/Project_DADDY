@@ -7,7 +7,7 @@ from faster_whisper import WhisperModel
 from loguru import logger
 
 MODEL_SIZE = "base"
-RECORD_SECONDS = 5
+RECORD_SECONDS = 10
 SAMPLE_RATE = 16000
 CHANNELS = 1
 
@@ -46,7 +46,8 @@ class SpeechInput:
             audio_path,
             language = "en",
             beam_size = 5,
-            vad_filter = True,
+            vad_filter = False,
+            condition_on_previous_text=False,
         )
 
         text = " ".join([seg.text.strip() for seg in segments])
