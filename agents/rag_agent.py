@@ -141,3 +141,48 @@ class RAGAgent(BaseAgent):
         )
         response = self.llm.invoke([HumanMessage(content=prompt)])
         return f"Summary of '{filename}':\n{response.content}"
+    
+    def search(self, data: dict) -> str:
+        query = data.get("query", "")
+        if not query:
+            return "Please provide a search query."
+
+        chunks = self.rag.retrieve(query, top_k=5)
+
+        if not chunks:
+            return f"No results found for '{query}' in your documents."
+
+        result = f"Found {len(chunks)} relevant passage(s) for '{query}':\n\n"
+        for i, chunk in enumerate(chunks, 1):
+            result += (
+                f"[{i}] From '{chunk['source']}' "
+                f"(similarity: {round(1 - chunk['distance'], 2)}):\n"
+                f"{chunk['text'][:300]}...\n\n"
+            )
+        return result.strip()
+
+    def status(self, data: dict) -> str:
+        return self.rag.get_status()
+
+    def clear(self, data: dict) -> str:
+        return self.rag.clear()
+    
+    def handle(self, command: str) -> str:
+        logger.info(f"RAGAgent handling: {command}")
+        data   = self.parse_command(command)
+        action = data.get("action", "")
+        logger.debug(f"Parsed action: {data}")
+
+        actions = {
+            "answer":       self.answer,
+            "index":        self.index,
+            "summarize_doc": self.summarize_doc,
+            "search":       self.search,
+            "status":       self.status,
+            "clear":        self.clear,
+        }
+
+        if action not in actions:
+            return f"Sorry, I don't know how to do '{action}' with the knowledge base."
+
+        return actions[action](data)

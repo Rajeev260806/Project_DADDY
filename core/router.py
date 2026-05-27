@@ -10,6 +10,8 @@ Reply with ONLY one of these exact words — nothing else:
 
 filesystem  → create, delete, move, rename, list, find files or folders (NOT Word files)
 word        → anything about a .docx or Word document
+rag         → anything about the user's personal knowledge base, notes, or documents
+              includes: index documents, answer from notes, what do my docs say, search my files
 general     → everything else (questions, conversation, calculations, definitions etc.)
 
 Examples:
@@ -23,6 +25,14 @@ Examples:
 "replace old with new in report.docx"                 → word
 "add a heading called Introduction to my document"    → word
 "delete paragraphs containing llama in report.docx"   → word
+"index my documents"                                  → rag
+"what does my knowledge base say about Python"        → rag
+"search my notes for machine learning"                → rag
+"what did I write about neural networks"              → rag
+"summarize my notes file"                             → rag
+"according to my documents what is RAG"               → rag
+"how many documents are indexed"                      → rag
+"clear my knowledge base"                             → rag
 "what is machine learning"                            → general
 "tell me a joke"                                      → general
 "what is 25 times 48"                                 → general
@@ -45,7 +55,7 @@ class Router:
         response = self.llm.invoke(messages)
         decision = response.content.strip().lower()
 
-        if decision not in ["filesystem","general","word"]:
+        if decision not in ["filesystem","general","word","rag"]:
             logger.warning(f"Router got unexpected decision: '{decision}' — defaulting to general")
             decision = "general"
 

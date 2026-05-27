@@ -10,6 +10,8 @@ from core.memory import ConversationMemory
 from core.speech_input import SpeechInput
 from core.speech_output import SpeechOutput
 from core.wakeword import WakeWordDetector
+from core.rag import RAGEngine
+from agents.rag_agent import RAGAgent
 from agents.filesystem_agent import FileSystemAgent
 from agents.word_agent import WordAgent
 from core.router import Router
@@ -29,7 +31,7 @@ def print_banner():
         border_style="bold cyan"
     ))
 
-def processCommand(user_input: str,llm: LLMCore,memory: ConversationMemory,router: Router,fs_agent: FileSystemAgent,word_agent: WordAgent,speech_output: SpeechOutput):
+def processCommand(user_input: str,llm: LLMCore,memory: ConversationMemory,router: Router,fs_agent: FileSystemAgent,word_agent:WordAgent,rag_agent:RAGAgent,speech_output: SpeechOutput):
     agent = router.route(user_input)
     console.print(f"[dim]→ Routing to: {agent}[/dim]")
 
@@ -41,6 +43,11 @@ def processCommand(user_input: str,llm: LLMCore,memory: ConversationMemory,route
     elif agent == "word":
         console.print(f"[dim]{ASSISTANT_NAME} is working on your document...[/dim]")
         result = word_agent.safe_run(user_input)
+        console.print(f"\n[bold cyan]{ASSISTANT_NAME}:[/bold cyan] {result}\n")
+        speech_output.speak(result)
+    elif agent == "rag":
+        console.print(f"[dim]{ASSISTANT_NAME} is searching your knowledge base...[/dim]")
+        result = rag_agent.safe_run(user_input)
         console.print(f"\n[bold cyan]{ASSISTANT_NAME}:[/bold cyan] {result}\n")
         speech_output.speak(result)
     else:
@@ -107,7 +114,7 @@ def goForWakeWord(wakeword:WakeWordDetector,speech_output: SpeechOutput):
 
 
 
-def runWakeWordMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput,memory:ConversationMemory,wakeword:WakeWordDetector,router:Router,fs_agent:FileSystemAgent,word_agent:WordAgent):
+def runWakeWordMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput,memory:ConversationMemory,wakeword:WakeWordDetector,router:Router,fs_agent:FileSystemAgent,word_agent: WordAgent, rag_agent:RAGAgent):
     goForWakeWord(wakeword,speech_output)
     rest_count = 0
     while True:
@@ -134,11 +141,11 @@ def runWakeWordMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOut
             console.print(f"[dim]Listening for wake word: 'Hey Daddy'...[/dim]")
             continue
 
-        processCommand(user_input, llm, memory, router, fs_agent, word_agent, speech_output)
+        processCommand(user_input, llm, memory, router, fs_agent, word_agent, rag_agent,speech_output)
 
         console.print(f"[dim]Listening for wake word: 'Hey Daddy'...[/dim]")
 
-def runTextMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput,memory:ConversationMemory,wakeword:WakeWordDetector,router:Router,fs_agent:FileSystemAgent,word_agent:WordAgent):
+def runTextMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput,memory:ConversationMemory,wakeword:WakeWordDetector,router:Router,fs_agent:FileSystemAgent,word_agent: WordAgent, rag_agent:RAGAgent):
     while True:
         user_input = console.input("[bold green]You said:[/bold green] ").strip()
 
@@ -152,9 +159,9 @@ def runTextMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput,
         if is_special:
             continue
 
-        processCommand(user_input, llm, memory, router, fs_agent, word_agent, speech_output)
+        processCommand(user_input, llm, memory, router, fs_agent, word_agent, rag_agent,speech_output)
 
-def runVoiceMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput,memory:ConversationMemory,wakeword:WakeWordDetector,router:Router,fs_agent:FileSystemAgent,word_agent: WordAgent):
+def runVoiceMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput,memory:ConversationMemory,wakeword:WakeWordDetector,router:Router,fs_agent:FileSystemAgent,word_agent: WordAgent, rag_agent:RAGAgent):
     while True:
         console.print("[dim]Press Enter to start recording...[/dim]")
         input()
@@ -173,7 +180,7 @@ def runVoiceMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput
         if is_special:
             continue
 
-        processCommand(user_input, llm, memory, router, fs_agent, word_agent, speech_output)
+        processCommand(user_input, llm, memory, router, fs_agent, word_agent, rag_agent,speech_output)
 
 
 
@@ -196,6 +203,8 @@ def main():
     fs_agent = FileSystemAgent()
     word_agent = WordAgent()
     router = Router()
+    rag_engine = RAGEngine()
+    rag_agent  = RAGAgent(rag_engine)
     speech_input = None
 
     if mode in ["voice", "wake"]:
@@ -213,11 +222,11 @@ def main():
 
     try:
         if mode == "text":
-            runTextMode(llm,speech_input, speech_output, memory, wakeword,router,fs_agent,word_agent)
+            runTextMode(llm,speech_input, speech_output, memory, wakeword,router,fs_agent,word_agent,rag_agent)
         elif mode == "voice":
-            runVoiceMode(llm, speech_input, speech_output, memory, wakeword,router,fs_agent,word_agent)
+            runVoiceMode(llm, speech_input, speech_output, memory, wakeword,router,fs_agent,word_agent,rag_agent)
         elif mode == "wake":
-            runWakeWordMode(llm, speech_input, speech_output, memory, wakeword,router,fs_agent,word_agent)
+            runWakeWordMode(llm, speech_input, speech_output, memory, wakeword,router,fs_agent,word_agent,rag_agent)
     except KeyboardInterrupt:
         console.print(f"\n[cyan]Daddy wants to leave urgently! Take care bye bye![/cyan]")
 

@@ -39,14 +39,16 @@ class RAGEngine:
         file = PdfReader(str(path))
         cont = ""
         for text in file.pages:
-            cont+=text + "\n"
+            extracted = text.extract_text()
+            if extracted:
+                cont+=extracted + "\n"
         return cont
     
     def read_docx(self, path: Path) -> str:
         doc  = Document(str(path))
         return "\n".join([p.text for p in doc.paragraphs if p.text.strip()])
     
-    def _read_document(self, path: Path) -> str:
+    def read_document(self, path: Path) -> str:
         ext = path.suffix.lower()
         if ext == ".txt" or ext == ".md":
             return self.read_text(path)
@@ -75,7 +77,9 @@ class RAGEngine:
         return hashlib.md5(raw.encode()).hexdigest()
     
     def index_document(self, path:Path)->int:
-        text = self.read_docx(path)
+        if not RAW_DIR_LOC.exists():
+            return "Knowledge folder not found. Please create knowledge/raw_docs/ and add files."
+        text = self.read_document(path)
         if not text.strip():
             return 0
         chunks = self.chunk_text(text,path.name)
@@ -120,7 +124,6 @@ class RAGEngine:
 
         total_chunks = 0
         indexed_files = []
-
         for file in files:
             count = self.index_document(file)
             total_chunks  += count

@@ -40,6 +40,7 @@ logs/
 
 # ── Knowledge Base & Vector Store ─────────
 knowledge/vector_store/
+knowledge/raw_docs
 *.chroma
 chroma.sqlite3
 
