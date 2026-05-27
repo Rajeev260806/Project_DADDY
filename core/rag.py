@@ -57,3 +57,78 @@ class RAGEngine:
         else:
             logger.warning(f"Unsupported file type: {path.name} — skipping.")
             return ""
+        
+    def chunk_text(self,text:str,source:str)->list[dict]:
+        start = 0
+        chunks = []
+        while start<len(text):
+            end = start + CHUNK_SIZE
+            chunk = text[start:end]
+
+            if chunk:
+                chunks.append({"text":chunk,"source":source})
+            start+=CHUNK_SIZE-CHUNK_OVERLAY
+        return chunks
+    
+    def make_id(self, source: str, chunk_index: int) -> str:
+        raw = f"{source}_{chunk_index}"
+        return hashlib.md5(raw.encode()).hexdigest()
+    
+    def index_document(self, path:Path)->int:
+        text = self.read_docx(path)
+        if not text.strip():
+            return 0
+        chunks = self.chunk_text(text,path.name)
+        ids        = []
+        texts      = []
+        embeddings = []
+        metadatas  = []
+
+        for i, chunk in enumerate(chunks):
+            chunk_id = self.make_id(path.name, i)
+            check_exist = self.collection.get(ids=[chunk_id])
+            if check_exist["ids"]:
+                continue
+
+            embedding = self.embedder.encode(chunk["text"]).tolist()
+            ids.append(chunk_id)
+            texts.append(chunk["text"])
+            embeddings.append(embedding)
+            metadatas.append({"source": chunk["source"], "chunk_index": i})
+
+        if ids:
+            self.collection.add(
+                ids=ids,
+                documents=texts,
+                embeddings=embeddings,
+                metadatas=metadatas
+            )
+            logger.success(f"  Added {len(ids)} new chunk(s) from {path.name}")
+        else:
+            logger.info(f"  {path.name} already fully indexed — skipped.")
+        return len(ids)
+    
+    def index_all(self) -> str:
+        supported = [".txt", ".md", ".pdf", ".docx"]
+        files     = [
+            f for f in RAW_DIR_LOC.iterdir()
+            if f.is_file() and f.suffix.lower() in supported
+        ]
+
+        if not files:
+            return "No documents found in knowledge/raw_docs/. Add .txt, .pdf or .docx files."
+
+        total_chunks = 0
+        indexed_files = []
+
+        for file in files:
+            count = self.index_document(file)
+            total_chunks  += count
+            indexed_files.append(file.name)
+
+        return (
+            f"Indexed {len(indexed_files)} document(s): "
+            f"{', '.join(indexed_files)}. "
+            f"Total chunks stored: {self.collection.count()}."
+        )
+        
