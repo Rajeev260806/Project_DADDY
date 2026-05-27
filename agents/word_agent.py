@@ -100,7 +100,7 @@ class WordAgent(BaseAgent):
     
     def load_doc(self,data:dict)->tuple[Document,Path]:
         file_path = self.get_doc_path(data)
-        if not file_path.exists:
+        if not file_path.exists():
             raise FileNotFoundError(f"'{data['name']}' not found in "
                 f"{self.resolve_path(data.get('path', 'documents')).name}.")
         return Document(file_path),file_path
