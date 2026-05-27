@@ -131,4 +131,42 @@ class RAGEngine:
             f"{', '.join(indexed_files)}. "
             f"Total chunks stored: {self.collection.count()}."
         )
+    
+    def retrieve(self,question: str,top_k: int = TOP_K)->list[dict]:
+        if self.collection.count() == 0:
+            return []
+        question_embedding = self.embedder.encode(question).tolist()
+        results = self.collection.query(
+            query_embeddings=[question_embedding],
+            n_results=min(top_k, self.collection.count()),
+            include=["documents", "metadatas", "distances"]
+        )
+
+        chunks = []
+        for text, meta, distance in zip(results["documents"][0],results["metadatas"][0],results["distances"][0]):
+            if distance<0.8:
+                chunks.append({"text": text,"source": meta["source"],"distance": round(distance, 3)})
+        return chunks
+    
+    def get_status(self) -> str:
+        count = self.collection.count()
+        if count == 0:
+            return "Knowledge base is empty. Add documents to knowledge/raw_docs/ and say 'index my documents'."
+
+        all_data = self.collection.get(include=["metadatas"])
+        sources  = list(set([m["source"] for m in all_data["metadatas"]]))
+
+        return (
+            f"Knowledge base has {count} chunk(s) from "
+            f"{len(sources)} document(s): {', '.join(sources)}"
+        )
+
+    def clear(self) -> str:
+        self.client.delete_collection(COLLECTION_NAME)
+        self.collection = self.client.get_or_create_collection(
+            name=COLLECTION_NAME,
+            metadata={"hnsw:space": "cosine"}
+        )
+        logger.success("Knowledge base cleared.")
+        return "Knowledge base cleared. All indexed documents removed."
         
