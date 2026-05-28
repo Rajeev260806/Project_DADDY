@@ -89,4 +89,33 @@ class PersistentMemory:
             logger.success("Old conversations summarized and compressed.")
         except Exception as e:
             logger.error(f"Failed to summarize old conversations: {e}")
-            
+
+    def getRecentConversations(self, n: int = MAX_RECENT_TURNS) -> list[dict]:
+        return self.data["conversations"][-n:]
+    
+    def addPreference(self,key:str,value:str):
+        for pref in self.data["preferences"]:
+            if pref["key"].lower()==key.lower():
+                pref["value"] = value
+                pref["timestamp"] = datetime.now().isoformat()
+                self.save()
+                logger.info(f"Updated preference: {key} = {value}")
+                return
+
+        self.data["preferences"].append({
+            "key":key,"value":value,"timestamp": datetime.now().isoformat()
+        })
+        self.save()
+        logger.info(f"Saved preference: {key} = {value}")
+
+    def getEveryPreferences(self):
+        return self.data["preferences"]
+    
+    def getPreference(self,key:str):
+        for pref in self.data["preferences"]:
+            if pref["key"].lower()==key.lower():
+                return pref["value"]
+        return ""
+    
+    
+    
