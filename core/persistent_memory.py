@@ -53,10 +53,10 @@ class PersistentMemory:
             logger.error(f"Failed to save memory: {e}")
 
     def addConversation(self,role:str,content:str):
-        self.data["conversation"].append({
+        self.data["conversations"].append({
             "role": role, 'content': content, 'timestamp' : datetime.now().isoformat()
         })
-        if len(self.data["conversation"])>SUMMARY_THRESHOLD:
+        if len(self.data["conversations"])>SUMMARY_THRESHOLD:
             self.summarizeConversation()
         self.save()
 
@@ -64,8 +64,10 @@ class PersistentMemory:
         old_turns = self.data["conversations"][:-MAX_RECENT_TURNS]
         recent_turns = self.data["conversations"][-MAX_RECENT_TURNS:]
 
-        old_text = "\n".join([f"{t["role"].upper()} : {t["content"]}"
-            for t in old_turns])
+        old_text = "\n".join([
+            f"{t['role'].upper()}: {t['content']}"
+            for t in old_turns
+        ])
         existing_summary = self.data["summary"]
         if existing_summary:
             prompt = (
@@ -130,7 +132,7 @@ class PersistentMemory:
         for task in self.data["tasks"]:
             if task_keyword.lower() in task["task"].lower() and task["status"] == "pending":
                 task["status"] = "completed"
-                self._save()
+                self.save()
                 return f"Task marked as completed: '{task['task']}'"
         return f"No pending task found matching '{task_keyword}'."
     
@@ -188,6 +190,22 @@ class PersistentMemory:
         self.data = self.default_data()
         self.save()
         return "All memory cleared — conversations, preferences and tasks."    
+    
+    def getStatus(self) -> str:
+        conv_count  = len(self.data["conversations"])
+        pref_count  = len(self.data["preferences"])
+        task_count  = len(self.data["tasks"])
+        pending     = len(self.getPendingTasks())
+        has_summary = "Yes" if self.data["summary"] else "No"
+
+        return (
+            f"Memory status:\n"
+            f"  Conversations  : {conv_count} recent turn(s)\n"
+            f"  Old summary    : {has_summary}\n"
+            f"  Preferences    : {pref_count}\n"
+            f"  Tasks (total)  : {task_count} "
+            f"({pending} pending)"
+        )
 
     def extract_and_save_preference(self, user_text: str):
         text  = user_text.lower()

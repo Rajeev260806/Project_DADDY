@@ -11,6 +11,7 @@ from core.speech_input import SpeechInput
 from core.speech_output import SpeechOutput
 from core.wakeword import WakeWordDetector
 from core.rag import RAGEngine
+from core.persistent_memory import PersistentMemory
 from agents.rag_agent import RAGAgent
 from agents.filesystem_agent import FileSystemAgent
 from agents.word_agent import WordAgent
@@ -31,35 +32,47 @@ def print_banner():
         border_style="bold cyan"
     ))
 
-def processCommand(user_input: str,llm: LLMCore,memory: ConversationMemory,router: Router,fs_agent: FileSystemAgent,word_agent:WordAgent,rag_agent:RAGAgent,speech_output: SpeechOutput):
+def processCommand(user_input: str,llm: LLMCore,memory: ConversationMemory,persistent:PersistentMemory,router: Router,fs_agent: FileSystemAgent,word_agent:WordAgent,rag_agent:RAGAgent,speech_output: SpeechOutput):
     agent = router.route(user_input)
     console.print(f"[dim]→ Routing to: {agent}[/dim]")
+
+    persistent.extract_and_save_preference(user_input)
+    persistent.extract_and_save_task(user_input)
 
     if agent=="filesystem":
         console.print(f"[dim]{ASSISTANT_NAME} is working on it...[/dim]")
         result = fs_agent.safe_run(user_input)
+        persistent.addConversation("user", user_input)
+        persistent.addConversation("agent", result)
         console.print(f"\n[bold cyan]{ASSISTANT_NAME}:[/bold cyan] {result}\n")
         speech_output.speak(result)
     elif agent == "word":
         console.print(f"[dim]{ASSISTANT_NAME} is working on your document...[/dim]")
         result = word_agent.safe_run(user_input)
+        persistent.addConversation("user", user_input)
+        persistent.addConversation("agent", result)
         console.print(f"\n[bold cyan]{ASSISTANT_NAME}:[/bold cyan] {result}\n")
         speech_output.speak(result)
     elif agent == "rag":
         console.print(f"[dim]{ASSISTANT_NAME} is searching your knowledge base...[/dim]")
         result = rag_agent.safe_run(user_input)
+        persistent.addConversation("user", user_input)
+        persistent.addConversation("agent", result)
         console.print(f"\n[bold cyan]{ASSISTANT_NAME}:[/bold cyan] {result}\n")
         speech_output.speak(result)
     else:
         history = memory.getHistory()
+        memory_context = persistent.buildContextBlock()
         memory.add_user_message(user_input)
         console.print(f"[dim]{ASSISTANT_NAME} is thinking...[/dim]")
-        response = llm.chat(user_input, history)
+        response = llm.chat(user_input, history,memory_context)
         memory.add_agent_message(response)
+        persistent.addConversation("user", user_input)
+        persistent.addConversation("agent", response)
         console.print(f"\n[bold cyan]{ASSISTANT_NAME}:[/bold cyan] {response}\n")
         speech_output.speak(response)
 
-def handleSpecialCommands(userInput:str,mode:str,memory:ConversationMemory,speech_input:SpeechInput,wake_detector:WakeWordDetector,speech_output:SpeechOutput)->tuple[bool,str,SpeechInput]:
+def handleSpecialCommands(userInput:str,mode:str,memory:ConversationMemory,persistent:PersistentMemory,speech_input:SpeechInput,wake_detector:WakeWordDetector,speech_output:SpeechOutput)->tuple[bool,str,SpeechInput]:
     cmd = userInput.lower().strip()
     if cmd in ["quit","exit","bye"]:
         byeText = "Tata Bye Bye See You!"
@@ -85,6 +98,40 @@ def handleSpecialCommands(userInput:str,mode:str,memory:ConversationMemory,speec
             mode = "text"
             console.print("[green]Switched to TEXT mode.[/green]\n")
         return True,mode,speech_input
+    
+    if cmd == "memory status":
+        status = persistent.getStatus() if persistent else "No persistent memory."
+        console.print(f"[cyan]{status}[/cyan]\n")
+        speech_output.speak(status)
+        return True, mode, speech_input
+    
+    if cmd in ["my tasks", "show tasks", "pending tasks"]:
+        tasks = persistent.getPendingTasks()
+        if not tasks:
+            msg = "You have no pending tasks."
+        else:
+            task_list = "\n".join([f"- {t['task']}" for t in tasks])
+            msg = f"Your pending tasks:\n{task_list}"
+        console.print(f"[cyan]{msg}[/cyan]\n")
+        speech_output.speak(msg)
+        return True, mode, speech_input
+    
+    if cmd.startswith("complete task "):
+        keyword = userInput[len("complete task "):].strip()
+        result  = persistent.completeTask(keyword)
+        console.print(f"[cyan]{result}[/cyan]\n")
+        speech_output.speak(result)
+        return True, mode, speech_input
+    
+    if cmd == "clear conversations":
+        result = persistent.clearConversations()
+        console.print(f"[yellow]{result}[/yellow]\n")
+        return True, mode, speech_input
+    
+    if cmd == "clear all memory":
+        result = persistent.clearAll()
+        console.print(f"[yellow]{result}[/yellow]\n")
+        return True, mode, speech_input
     
     if cmd.startswith("threshold "):
         parts = cmd.split()
@@ -114,7 +161,7 @@ def goForWakeWord(wakeword:WakeWordDetector,speech_output: SpeechOutput):
 
 
 
-def runWakeWordMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput,memory:ConversationMemory,wakeword:WakeWordDetector,router:Router,fs_agent:FileSystemAgent,word_agent: WordAgent, rag_agent:RAGAgent):
+def runWakeWordMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput,memory:ConversationMemory,persistent:PersistentMemory,wakeword:WakeWordDetector,router:Router,fs_agent:FileSystemAgent,word_agent: WordAgent, rag_agent:RAGAgent):
     goForWakeWord(wakeword,speech_output)
     rest_count = 0
     while True:
@@ -135,17 +182,17 @@ def runWakeWordMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOut
 
         console.print(f"[bold green]You said:[/bold green] {user_input}")
 
-        is_special, _, _ = handleSpecialCommands(user_input, "wake", memory,speech_input, wakeword, speech_output)
+        is_special, _, _ = handleSpecialCommands(user_input, "wake", memory,persistent,speech_input, wakeword, speech_output)
 
         if is_special:
             console.print(f"[dim]Listening for wake word: 'Hey Daddy'...[/dim]")
             continue
 
-        processCommand(user_input, llm, memory, router, fs_agent, word_agent, rag_agent,speech_output)
+        processCommand(user_input, llm, memory, persistent, router, fs_agent, word_agent, rag_agent,speech_output)
 
         console.print(f"[dim]Listening for wake word: 'Hey Daddy'...[/dim]")
 
-def runTextMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput,memory:ConversationMemory,wakeword:WakeWordDetector,router:Router,fs_agent:FileSystemAgent,word_agent: WordAgent, rag_agent:RAGAgent):
+def runTextMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput,memory:ConversationMemory,persistent:PersistentMemory,wakeword:WakeWordDetector,router:Router,fs_agent:FileSystemAgent,word_agent: WordAgent, rag_agent:RAGAgent):
     while True:
         user_input = console.input("[bold green]You said:[/bold green] ").strip()
 
@@ -153,15 +200,15 @@ def runTextMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput,
             continue
 
         is_special, _, _ = handleSpecialCommands(
-            user_input, "text", memory,
+            user_input, "text", memory,persistent,
             speech_input, wakeword, speech_output
         )
         if is_special:
             continue
 
-        processCommand(user_input, llm, memory, router, fs_agent, word_agent, rag_agent,speech_output)
+        processCommand(user_input, llm, memory, persistent, router, fs_agent, word_agent, rag_agent,speech_output)
 
-def runVoiceMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput,memory:ConversationMemory,wakeword:WakeWordDetector,router:Router,fs_agent:FileSystemAgent,word_agent: WordAgent, rag_agent:RAGAgent):
+def runVoiceMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput,memory:ConversationMemory,persistent:PersistentMemory,wakeword:WakeWordDetector,router:Router,fs_agent:FileSystemAgent,word_agent: WordAgent, rag_agent:RAGAgent):
     while True:
         console.print("[dim]Press Enter to start recording...[/dim]")
         input()
@@ -174,13 +221,13 @@ def runVoiceMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput
         console.print(f"[bold green]You said:[/bold green] {user_input}")
 
         is_special, _, _ = handleSpecialCommands(
-            user_input, "voice", memory,
+            user_input, "voice", memory,persistent,
             speech_input, wakeword, speech_output
         )
         if is_special:
             continue
 
-        processCommand(user_input, llm, memory, router, fs_agent, word_agent, rag_agent,speech_output)
+        processCommand(user_input, llm, memory, persistent, router, fs_agent, word_agent, rag_agent,speech_output)
 
 
 
@@ -198,6 +245,7 @@ def main():
 
     llm = LLMCore()
     memory = ConversationMemory()
+    persistent = PersistentMemory()
     speech_output = SpeechOutput()
     wakeword = WakeWordDetector()
     fs_agent = FileSystemAgent()
@@ -222,11 +270,11 @@ def main():
 
     try:
         if mode == "text":
-            runTextMode(llm,speech_input, speech_output, memory, wakeword,router,fs_agent,word_agent,rag_agent)
+            runTextMode(llm,speech_input, speech_output, memory,persistent, wakeword,router,fs_agent,word_agent,rag_agent)
         elif mode == "voice":
-            runVoiceMode(llm, speech_input, speech_output, memory, wakeword,router,fs_agent,word_agent,rag_agent)
+            runVoiceMode(llm, speech_input, speech_output, memory,persistent, wakeword,router,fs_agent,word_agent,rag_agent)
         elif mode == "wake":
-            runWakeWordMode(llm, speech_input, speech_output, memory, wakeword,router,fs_agent,word_agent,rag_agent)
+            runWakeWordMode(llm, speech_input, speech_output, memory,persistent, wakeword,router,fs_agent,word_agent,rag_agent)
     except KeyboardInterrupt:
         console.print(f"\n[cyan]Daddy wants to leave urgently! Take care bye bye![/cyan]")
 
