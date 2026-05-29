@@ -42,7 +42,7 @@ Rules:
 - question and query fields should be the core topic — clean and concise
 """
 
-ANSWER_PROMPT = """You are Nova, a helpful personal AI assistant.
+ANSWER_PROMPT = """You are daddy, a helpful personal AI assistant.
 Answer the user's question using ONLY the context provided below from their personal documents.
 
 Rules:
