@@ -84,6 +84,36 @@
       "role": "agent",
       "content": "Your name, Rajeev!, I'm happy to remind. As for what I know about you... You've asked me to slow down our conversation earlier today. We also discussed reminding you about an assignment deadline tomorrow and buying groceries soon. That's the best I can recall from our recent conversation, Rajeev!",
       "timestamp": "2026-05-28T14:56:30.823434"
+    },
+    {
+      "role": "user",
+      "content": "Hi daady do you remember me!",
+      "timestamp": "2026-05-29T18:17:19.804354"
+    },
+    {
+      "role": "agent",
+      "content": "Rajeev, of course! I'm your personal AI assistant. We discussed reminders, assignments, and grocery shopping earlier today. How can I help you now?",
+      "timestamp": "2026-05-29T18:17:19.805363"
+    },
+    {
+      "role": "user",
+      "content": "Can you list my uncompleted tasks",
+      "timestamp": "2026-05-29T18:18:22.893853"
+    },
+    {
+      "role": "agent",
+      "content": "Folder 'tasks' not found.",
+      "timestamp": "2026-05-29T18:18:22.894922"
+    },
+    {
+      "role": "user",
+      "content": "list my tasks",
+      "timestamp": "2026-05-29T18:20:10.289463"
+    },
+    {
+      "role": "agent",
+      "content": "Contents of Desktop:\n  Files (2): Neo Browser.lnk, desktop.ini",
+      "timestamp": "2026-05-29T18:20:10.290028"
     }
   ],
   "summary": "",

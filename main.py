@@ -32,6 +32,14 @@ def print_banner():
         border_style="bold cyan"
     ))
 
+def graceful_shutdown(persistent: PersistentMemory, speech_output: SpeechOutput):
+    try:
+        persistent.save()
+        logger.info("Memory saved on shutdown.")
+        speech_output.speak("Tata Bye Bye See You!")
+    except Exception as e:
+        logger.error(f"Shutdown error: {e}")
+
 def processCommand(user_input: str,llm: LLMCore,memory: ConversationMemory,persistent:PersistentMemory,router: Router,fs_agent: FileSystemAgent,word_agent:WordAgent,rag_agent:RAGAgent,speech_output: SpeechOutput):
     agent = router.route(user_input)
     console.print(f"[dim]→ Routing to: {agent}[/dim]")
@@ -105,7 +113,7 @@ def handleSpecialCommands(userInput:str,mode:str,memory:ConversationMemory,persi
         speech_output.speak(status)
         return True, mode, speech_input
     
-    if cmd in ["my tasks", "show tasks", "pending tasks"]:
+    if cmd in ["my tasks", "show tasks", "pending tasks", "list my tasks"]:
         tasks = persistent.getPendingTasks()
         if not tasks:
             msg = "You have no pending tasks."
@@ -277,6 +285,8 @@ def main():
             runWakeWordMode(llm, speech_input, speech_output, memory,persistent, wakeword,router,fs_agent,word_agent,rag_agent)
     except KeyboardInterrupt:
         console.print(f"\n[cyan]Daddy wants to leave urgently! Take care bye bye![/cyan]")
+    finally:
+        graceful_shutdown(persistent, speech_output)
 
 if __name__=="__main__":
     main()

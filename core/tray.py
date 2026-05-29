@@ -29,10 +29,10 @@ class TrayApp:
         return img
     
     def start_daddy(self):
-        if self._daddy_running:
+        if self.daddy_running:
             logger.warning("Daddy is already running.")
             return
-        self._daddy_running = True
+        self.daddy_running = True
         self.daddy_thread   = threading.Thread(
             target=self.run_daddy_safe,
             daemon=True,
@@ -49,7 +49,7 @@ class TrayApp:
         except Exception as e:
             logger.error(f"daddy crashed: {e}")
         finally:
-            self._daddy_running = False
+            self.daddy_running = False
             logger.info("daddy thread ended.")
 
     def on_open(self, icon, item):
@@ -64,7 +64,7 @@ class TrayApp:
     
     def on_restart(self, icon, item):
         logger.info("Restarting daddy...")
-        self._daddy_running = False
+        self.daddy_running = False
         self.start_daddy()
 
     def on_enable_startup(self, icon, item):
@@ -81,7 +81,7 @@ class TrayApp:
 
     def on_quit(self, icon, item):
         logger.info("Quitting daddy from tray...")
-        self._daddy_running = False
+        self.daddy_running = False
         icon.stop()
         sys.exit(0)
 
