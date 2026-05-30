@@ -239,17 +239,20 @@ def runVoiceMode(llm:LLMCore,speech_input:SpeechInput,speech_output:SpeechOutput
 
 
 
-def main():
+def main(default_mode: str = None):
 
     print_banner()
 
-    console.print("\n[bold cyan]Choose input mode:[/bold cyan]")
-    console.print("  [green]1[/green] → Text mode")
-    console.print("  [green]2[/green] → Voice mode")
-    console.print("  [green]3[/green] → Wake word mode \n")
+    if default_mode:
+        mode = default_mode
 
-    choice = console.input("Enter 1, 2 or 3: ").strip()
-    mode = {"1": "text", "2": "voice", "3": "wake"}.get(choice, "text")
+    else:
+        console.print("\n[bold cyan]Choose input mode:[/bold cyan]")
+        console.print("  [green]1[/green] → Text mode")
+        console.print("  [green]2[/green] → Voice mode")
+        console.print("  [green]3[/green] → Wake word mode \n")
+        choice = console.input("Enter 1, 2 or 3: ").strip()
+        mode = {"1": "text", "2": "voice", "3": "wake"}.get(choice, "text")
 
     llm = LLMCore()
     memory = ConversationMemory()

@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from loguru import logger
 import pystray
-from PIL import Image
+from PIL import Image,  ImageDraw
 from pystray import MenuItem as item
 from config import ASSISTANT_NAME
 

@@ -77,8 +77,6 @@ class RAGEngine:
         return hashlib.md5(raw.encode()).hexdigest()
     
     def index_document(self, path:Path)->int:
-        if not RAW_DIR_LOC.exists():
-            return "Knowledge folder not found. Please create knowledge/raw_docs/ and add files."
         text = self.read_document(path)
         if not text.strip():
             return 0
