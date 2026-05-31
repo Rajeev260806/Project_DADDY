@@ -14,7 +14,7 @@ def run_with_tray():
     startup_manager = StartupManager()
 
     def daddy_runner():
-        daddy_main.main(default_mode="wake")
+        daddy_main.main()
 
     tray = TrayApp(
         daddy_runner=daddy_runner,
