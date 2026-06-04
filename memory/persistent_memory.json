@@ -2,61 +2,6 @@
   "conversations": [
     {
       "role": "user",
-      "content": "Call me Rajeev",
-      "timestamp": "2026-05-28T14:42:40.072700"
-    },
-    {
-      "role": "user",
-      "content": "Call me Rajeev!",
-      "timestamp": "2026-05-28T14:47:48.907928"
-    },
-    {
-      "role": "agent",
-      "content": "Hello Rajeev! I'm here to help. What's on your mind today?",
-      "timestamp": "2026-05-28T14:47:48.909010"
-    },
-    {
-      "role": "user",
-      "content": "keep it short",
-      "timestamp": "2026-05-28T14:48:38.836538"
-    },
-    {
-      "role": "agent",
-      "content": "What do you need help with, Rajeev?",
-      "timestamp": "2026-05-28T14:48:38.836538"
-    },
-    {
-      "role": "user",
-      "content": "speak slower",
-      "timestamp": "2026-05-28T14:49:31.315968"
-    },
-    {
-      "role": "agent",
-      "content": "S-slow down, Rajeev... Wh-what do you n-need h-help w-with today?",
-      "timestamp": "2026-05-28T14:49:31.316976"
-    },
-    {
-      "role": "user",
-      "content": "remind me to submit the assignment tomorrow",
-      "timestamp": "2026-05-28T14:50:34.043946"
-    },
-    {
-      "role": "agent",
-      "content": "Tomorrow's deadline is for your assignment. I'll remind you again at that time if needed. Would you like me to set a reminder on your calendar, Rajeev?",
-      "timestamp": "2026-05-28T14:50:34.043946"
-    },
-    {
-      "role": "user",
-      "content": "yes",
-      "timestamp": "2026-05-28T14:51:35.775668"
-    },
-    {
-      "role": "agent",
-      "content": "Reminder set for 10:00 AM tomorrow. Any specific notification would you like, Rajeev?",
-      "timestamp": "2026-05-28T14:51:35.775668"
-    },
-    {
-      "role": "user",
       "content": "i need to buy groceries",
       "timestamp": "2026-05-28T14:52:39.197003"
     },
@@ -124,9 +69,59 @@
       "role": "agent",
       "content": "Hello Rajeev! I'm functioning properly, thanks for asking. I don't have feelings like humans do, but I'm here to help with any tasks or questions you may have. How can I assist you today?",
       "timestamp": "2026-05-31T11:59:27.161570"
+    },
+    {
+      "role": "user",
+      "content": "Where can I find the portfolio websites design?",
+      "timestamp": "2026-06-04T12:02:52.095085"
+    },
+    {
+      "role": "agent",
+      "content": "Rajeev!, I don't recall discussing a portfolio website design with you earlier. Can you please remind me what kind of design are you looking for (e.g., Bootstrap, Tailwind CSS)? Are you working on a specific project? I'd be happy to help if I can find the context or provide some general suggestions!",
+      "timestamp": "2026-06-04T12:02:52.096710"
+    },
+    {
+      "role": "user",
+      "content": "He create a new folder named Design Templates.",
+      "timestamp": "2026-06-04T12:04:58.935278"
+    },
+    {
+      "role": "agent",
+      "content": "Done! Folder 'Design Templates' created in Documents.",
+      "timestamp": "2026-06-04T12:04:58.936560"
+    },
+    {
+      "role": "user",
+      "content": "to the absolute file path for this folder you created.",
+      "timestamp": "2026-06-04T12:06:09.461796"
+    },
+    {
+      "role": "agent",
+      "content": "Sorry, something went wrong while handling that: 'name'",
+      "timestamp": "2026-06-04T12:06:09.463484"
+    },
+    {
+      "role": "user",
+      "content": "create a folder Design_Template in desktop",
+      "timestamp": "2026-06-04T12:08:04.860824"
+    },
+    {
+      "role": "agent",
+      "content": "Done! Folder 'Design_Template' created in Desktop.",
+      "timestamp": "2026-06-04T12:08:04.861929"
+    },
+    {
+      "role": "user",
+      "content": "create a file design.docx inside Design_Template in desktop",
+      "timestamp": "2026-06-04T12:08:59.182530"
+    },
+    {
+      "role": "agent",
+      "content": "Done! File 'Design.docx' created in Desktop.",
+      "timestamp": "2026-06-04T12:08:59.185175"
     }
   ],
-  "summary": "",
+  "summary": "Here is a concise summary of the conversation:\n\nRajeev contacted the agent for assistance. He asked to be called by his name and wanted the conversation to be slower-paced. The agent helped Rajeev with a task: reminding him to submit an assignment tomorrow. The deadline is set for 10:00 AM tomorrow, and the agent will remind Rajeev again if needed. Rajeev requested that a reminder be set on his calendar. A reminder was set for 10:00 AM tomorrow.",
   "preferences": [
     {
       "key": "user_name",

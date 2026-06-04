@@ -110,3 +110,4 @@ coverage.xml
 *.swo
 tmp/
 temp/
+persistent_memory.json
